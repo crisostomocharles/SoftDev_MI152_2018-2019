@@ -1,0 +1,107 @@
+        btn_scan= (Button) findViewById(R.id.btn_scan);
+        btn_assign= (Button) findViewById(R.id.btn_assign);
+        etName= (EditText) findViewById(R.id.etName);
+        database = FirebaseDatabase.getInstance();
+        reference = FirebaseDatabase.getInstance().getReference();
+
+        final Activity activity = this;
+        btn_assign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               validate();
+            }
+        });
+        btn_scan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IntentIntegrator integrator = new IntentIntegrator(activity);
+                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+                integrator.setPrompt("scan");
+                integrator.setCameraId(0);
+                integrator.setBeepEnabled(false);
+                integrator.setBarcodeImageEnabled(false);
+                integrator.initiateScan();
+            }
+
+        });
+
+    }
+
+    private void validate() {
+        initialize();
+        if (!validation()){
+            Toast.makeText(Assignment.this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
+        }else{
+            updating();
+        }
+
+    }
+    public void initialize() {
+        department = sp_Dept.getSelectedItem().toString();
+        name = etName.getText().toString();
+    }
+    public void updating(){
+        String department = sp_Dept.getSelectedItem().toString();
+        String name = etName.getText().toString();
+
+        Toast.makeText(Assignment.this, "Assigned", Toast.LENGTH_SHORT).show();
+
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference roomsRef = database.getReference("Assign").child("-LHERICH1OF8JJUuLQyh");
+        roomsRef.push().setValue(new Dept(department, name));
+
+        etName.setText("");
+    }
+
+    public boolean validation(){
+        boolean valid = true;
+        if (name.isEmpty()){
+            etName.setError("You need to scan to get the name and student number!");
+            valid=false;
+        }
+
+        return valid;
+    }
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                Toast.makeText(this, "You cancelled scanning", Toast.LENGTH_LONG).show();
+            } else {
+                Log.d("MainActivity", "Scanned");
+                reference.child(result.getContents()).addValueEventListener(new ValueEventListener() {
+
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        // Product p = dataSnapshot.getValue(Product.class);
+                        //Log.e("Name", p.QrCode);
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+                etName.setText(result.getContents());
+                Toast.makeText(this, "Scanned", Toast.LENGTH_SHORT).show();
+                // tv.setText(result.getContents());
+                q = etName.getText().toString();
+                // Write a message to the database
+
+
+
+
+            }
+        } else {
+
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+}
