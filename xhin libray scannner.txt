@@ -1,0 +1,2 @@
+implementation 'com.google.zxingcore3.3.0'
+    implementation 'com.journeyappszxing-android-embedded3.4.0@aar'
